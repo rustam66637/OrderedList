@@ -3,103 +3,146 @@ class Node:
         self.value = v
         self.prev = None
         self.next = None
-
 class OrderedList:
-    def __init__(self, asc):
+    def __init__(self, asc = True):
         self.head = None
         self.tail = None
         self.__ascending = asc
-
+    def print_all_nodes(self): #метод отладочного вывода списка
+        node = self.head
+        while node != None:
+            print(node.value)
+            node = node.next
     def compare(self, v1, v2):
-        if v1 < v2: return -1 # -1 если v1 < v2
-        elif v1 == v2: return 0 # 0 если v1 == v2
-        elif v1 > v2: return 1 # +1 если v1 > v2
+        '''
+        Сравнение значений node с value
+        '''
+        if self.__ascending:
+            if v1 < v2: return -1
+            elif v1 == v2: return 0
+            elif v1 > v2: return 1
+        else:
+            if v1 < v2: return 1
+            elif v1 == v2: return 0
+            elif v1 > v2: return -1
 
     def add(self, value):
         '''
-        автоматическая вставка value
+        Автоматическая вставка value
         в нужную позицию
         '''
-        node = self.head
+        if type(value) == int:
+            value = Node(value)
+            node = self.head
+        if self.head == None: # Первый элемент в списке!
+            self.head = self.tail = value # Начало = Конец = value
+            value.prev = None # Пред.элемент отсутствует
+            value.next = None # След.элемент отсутствует
+        else:
+            while node != None:
+                if self.compare(value.value, node.value) <= 0:
+                    if self.head == self.tail or self.head == node:
+                        #первый или единственный элемент
+                        value.next = node
+                        value.prev = node.prev
+                        node.prev = self.head = value
+                        break
+                    else:
+                        break
 
-        while node != None:
-            # Первый элемент в списке!
-            if self.head == None:
-                self.head = self.tail = value # Начало = Конец = value
-                value.prev = None # Пред.элемент отсутствует
-                value.next = None # След.элемент отсутствует
-
-            # Число меньше тек. узла
-            if self.compare(value, node.value) == -1:
-                if node.prev == None: # Когда был единственный элемент!
-                    self.head = value # Начало = value
-                    value.prev = None # Нет предыдущего элемента
-                    value.next = node # След. элемент = тек.элемент(node)
-                    node.prev = value # value -> пред. элемент node
-                    self.tail = node # node -> Конец
-                else:
-                    value.prev = node.prev # Ссылка на пред.элем. = пред.node
-                    value.next = node # Ссылка на след. элемент = тек.node
-
-            # Число равно текущему
-            if self.compare(value, node.value) == 0:
-                if node == self.tail:# Если элемент последний
-                    self.tail = value # value -> хвост
-                    value.prev = node # пред.элемент = node
-                    value.next = None # След. элем. = None
-                    node.next = value # след. элем node = value
-                else:
-                    node.next = value # node след.элем = value
-                    value.prev = node # пред.элем value = node
-
-            # Число больше узла
-            if self.compare(value, node.value) == 1:
-                if node == self.head or node == self.tail:
-                    # Если элемент единственный или последний
-                    node.next = value # node.next -> value
-                    value.prev = node # value.prev -> node
-                    value.next = None # value.next -> None
-                    self.tail = value # tail -> value
-                else:
-                    node.next = value
-                    value.prev = node
-            node = node.next
+                if self.compare(value.value, node.value) == 1:
+                    if self.head == self.tail:#единствен
+                        value.prev = node
+                        node.next = value
+                        self.tail = value
+                        break
+                    elif self.head == node: #первый
+                        value.prev = node
+                        value.next = node.next
+                        value.next.prev = value
+                        node.next = value
+                    elif self.tail == node: #послед
+                        node.prev = value.prev
+                        value.prev.next = node
+                        value.prev = node
+                        value.next = None
+                        node.next = value
+                        self.tail = value
+                        break
+                    else:
+                        node.prev = value.prev
+                        value.prev.next = node
+                        value.prev = node
+                        value.next = node.next
+                        value.next.prev = value
+                        node.next = value
+                node = value.next
 
     def find(self, val):
         '''
         Поиск по значению
-        Возвращает узел либо None
+        Возвращает узел, либо None
         '''
         node = self.head
-        while node != None:
-            if node.value == val:
-                return node
-            node = node.next
-        return None
+        if self.__ascending:
+            while node != None:
+                if node.value == val: return node
+                elif node.value > val: return None
+                elif node.value < val: node = node.next
+        if not self.__ascending:
+            while node != None:
+                if node.value == val: return node
+                elif node.value < val: return None
+                elif node.value > val: node = node.next
 
     def delete(self, val):
-        node = self.head
-        while node != None:
-            if node.value == val:
-                node.prev.next = node.next
-                node.next.prev = node.prev
-                node.next = None
-                node.prev = None
+        '''
+        Удаление узла по значению
+        '''
+        search = self.find(val)
+        if search != None:
+            if self.head == self.tail == search:
+                self.head = self.tail = None
+                return None
+            elif self.head == search:
+                self.head = search.next
+                search.next.prev = None
+                search.next = None
+                return None
+            elif self.tail == search:
+                self.tail = search.prev
+                search.prev.next = None
+                search.prev = None
+                return None
+            search.next.prev = search.prev
+            search.prev.next = search.next
+            search.next = None
+            search.prev = None
         return None
 
-    def clean(self, asc):
-        self.__ascending = asc
-        pass # здесь будет ваш код
-
     def len(self):
+        '''
+        Длина списка
+        '''
         node = self.head
         len = 0
         while node != None:
             len += 1
             node = node.next
-        return len # здесь будет ваш код
+        return len
+
+    def clean(self, asc = True):
+        '''
+        Метод очистки списка
+        '''
+        self.__ascending = asc
+        self.head = None
+        self.tail = None
 
     def get_all(self):
+        '''
+        Список всех элементов
+        '''
         r = []
         node = self.head
         while node != None:
@@ -107,5 +150,10 @@ class OrderedList:
             node = node.next
         return r
 
-s = OrderedList()
-s.add(Node(12))
+class OrderedStringList(OrderedList):
+    def __init__(self, asc):
+        super(OrderedStringList, self).__init__(asc)
+
+    def compare(self, v1, v2):
+        # переопределённая версия для строк
+        return 0
