@@ -31,9 +31,8 @@ class OrderedList:
         Автоматическая вставка value
         в нужную позицию
         '''
-        if type(value) == int:
-            value = Node(value)
-            node = self.head
+        value = Node(value)
+        node = self.head
         if self.head == None: # Первый элемент в списке!
             self.head = self.tail = value # Начало = Конец = value
             value.prev = None # Пред.элемент отсутствует
@@ -151,9 +150,20 @@ class OrderedList:
         return r
 
 class OrderedStringList(OrderedList):
-    def __init__(self, asc):
-        super(OrderedStringList, self).__init__(asc)
+    def __init__(self, asc = True):
+        self.head = None
+        self.tail = None
+        self.__ascending = asc
 
-    def compare(self, v1, v2):
-        # переопределённая версия для строк
-        return 0
+    def compare(self, v1, v2):# переопределённая версия для строк
+        '''
+        Сравнение значений node с value
+        '''
+        if self.__ascending:
+            if v1 < v2: return -1
+            elif v1 == v2: return 0
+            elif v1 > v2: return 1
+        else:
+            if v1 < v2: return 1
+            elif v1 == v2: return 0
+            elif v1 > v2: return -1
